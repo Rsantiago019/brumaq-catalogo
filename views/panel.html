@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Panel de administración</title>
+<link rel="icon" href="img/logo.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira:ital,wdth,wght@0,75..125,400..900;1,75..125,400..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<header class="bar">
+  <div class="bar__in">
+    <img src="img/logo.png" alt="Brumaq" width="132" height="42">
+    <span class="bar__title">Panel de administración</span>
+    <span class="bar__spacer"></span>
+    <span class="bar__user" id="userEmail"></span>
+    <button class="btn btn--ghost" id="catalog" type="button" onclick="window.location.href='/'">Ver catálogo</button>
+    <button class="btn btn--ghost" id="logout" type="button" onclick="logout()">Salir</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-products" aria-selected="true" aria-controls="view-products">Productos</button>
+    <button role="tab" id="tab-categories" aria-selected="false" aria-controls="view-categories">Tipos de producto</button>
+    <button role="tab" id="tab-users" aria-selected="false" aria-controls="view-users">Cuentas</button>
+  </div>
+
+  <p class="toast" id="toast" role="status" aria-live="polite"></p>
+
+  <section id="view-products" role="tabpanel" aria-labelledby="tab-products">
+    <div class="head">
+      <h2>Productos <small id="count"></small></h2>
+      <button class="btn" id="newProduct" type="button">+ Nuevo producto</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th></th><th>Nombre</th><th>Tipo</th><th>Estado</th><th>Actualizado</th><th class="right">Acciones</th></tr></thead>
+        <tbody id="productRows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="view-categories" role="tabpanel" aria-labelledby="tab-categories" hidden>
+    <div class="head"><h2>Tipos de producto</h2></div>
+    <form class="inline" id="catForm">
+      <label class="grow">Nuevo tipo<input name="name" maxlength="60" placeholder="Ej.: Cosechadoras" required></label>
+      <button class="btn" type="submit">Agregar</button>
+    </form>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nombre</th><th>Productos</th><th class="right">Acciones</th></tr></thead>
+        <tbody id="catRows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="view-users" role="tabpanel" aria-labelledby="tab-users" hidden>
+    <div class="head"><h2>Cuentas de administrador</h2></div>
+    <div id="createUserBlock" class="account-block">
+      <h3>Crear cuenta</h3>
+      <p class="hint">La cuenta nueva tendrá acceso de administrador al panel.</p>
+      <form id="createUserForm" class="account-form" novalidate>
+        <label>Email
+          <input type="email" name="email" maxlength="254" autocomplete="username" required>
+        </label>
+        <label>Contraseña
+          <input type="password" name="password" minlength="10" autocomplete="new-password" required>
+        </label>
+        <p class="hint">Mínimo 10 caracteres, con letras y números.</p>
+        <p class="error" id="createUserError" role="alert"></p>
+        <button class="btn" type="submit" id="createUserSubmit">Crear cuenta</button>
+      </form>
+    </div>
+
+    <div class="account-block">
+      <h3>Cambiar mi contraseña</h3>
+      <form id="changePasswordForm" class="account-form" novalidate>
+        <label>Contraseña actual
+          <input type="password" name="currentPassword" autocomplete="current-password" required>
+        </label>
+        <label>Nueva contraseña
+          <input type="password" name="newPassword" minlength="10" autocomplete="new-password" required>
+        </label>
+        <label>Repetir nueva contraseña
+          <input type="password" name="confirmation" minlength="10" autocomplete="new-password" required>
+        </label>
+        <p class="hint">Mínimo 10 caracteres, con letras y números. El cambio cerrará todas las sesiones y deberá ingresar nuevamente.</p>
+        <p class="error" id="changePasswordError" role="alert"></p>
+        <button class="btn" type="submit" id="changePasswordSubmit">Actualizar contraseña</button>
+      </form>
+    </div>
+
+    <p class="hint">Si olvidó su contraseña, recupérela desde la consola del servidor con <code>npm run reset-password -- --email su@email.com</code>. Se le pedirá la nueva contraseña de forma oculta.</p>
+  </section>
+</main>
+
+<dialog id="productDialog" aria-labelledby="pd-title">
+  <form id="productForm" novalidate>
+    <div class="dlg__head">
+      <h2 id="pd-title">Nuevo producto</h2>
+      <button class="x" type="button" id="pdClose" aria-label="Cerrar">×</button>
+    </div>
+
+    <div class="dlg__body">
+      <label>Nombre del producto *
+        <input name="name" maxlength="120" required>
+      </label>
+      <div class="row2">
+        <label>Tipo de producto *
+          <select name="category_id" required></select>
+        </label>
+        <label>Estado
+          <select name="status">
+            <option value="active">Activo (visible en el catálogo)</option>
+            <option value="inactive">Inactivo (oculto)</option>
+          </select>
+        </label>
+      </div>
+      <label>Descripción
+        <textarea name="description" rows="4" maxlength="5000"></textarea>
+      </label>
+
+      <fieldset>
+        <legend>Características técnicas</legend>
+        <div id="specRows"></div>
+        <button class="btn btn--ghost btn--sm" type="button" id="addSpec">+ Agregar característica</button>
+        <datalist id="specNames">
+          <option value="Potencia"></option><option value="Tracción"></option><option value="Transmisión"></option>
+          <option value="Capacidad"></option><option value="Ancho de trabajo"></option><option value="Año"></option>
+          <option value="Condición"></option><option value="Uso"></option>
+        </datalist>
+      </fieldset>
+
+      <fieldset>
+        <legend>Imágenes (JPG, PNG o WebP · máx. 5 MB · hasta 8)</legend>
+        <div class="thumbs" id="currentImages"></div>
+        <input type="file" id="files" accept="image/jpeg,image/png,image/webp" multiple>
+        <div class="thumbs" id="newImages"></div>
+        <p class="hint" id="imgHint"></p>
+      </fieldset>
+
+      <p class="error" id="formError" role="alert"></p>
+    </div>
+
+    <div class="dlg__foot">
+      <button class="btn btn--ghost" type="button" id="pdCancel">Cancelar</button>
+      <button class="btn" type="submit" id="pdSave">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="admin/app.js"></script>
+</body>
+</html>
