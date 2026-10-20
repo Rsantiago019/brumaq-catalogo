@@ -15,6 +15,7 @@ function ask(question, { hidden = false } = {}) {
     rl._writeToOutput = str => {
       if (!rl.stdoutMuted) rl.output.write(str);
     };
+    
     rl.question(question, answer => {
       rl.close();
       if (hidden) process.stdout.write('\n');
