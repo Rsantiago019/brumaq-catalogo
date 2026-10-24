@@ -34,6 +34,7 @@ function ask(question, { hidden = false } = {}) {
 }
 
 (async () => {
+  await db.initialize();
   const email = (arg('email') || (await ask('Email del administrador: '))).trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error('Email inválido.');
 
@@ -43,13 +44,13 @@ function ask(question, { hidden = false } = {}) {
 
   const hash = await hashPassword(password); // bcrypt, costo 12
   try {
-    db.prepare('INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)').run(email, hash, 'admin');
+    await db.query('INSERT INTO users (email, password_hash, role) VALUES ($1, $2, $3)', [email, hash, 'admin']);
     console.log(`\nAdministrador creado: ${email}`);
   } catch (e) {
-    if (String(e.code).startsWith('SQLITE_CONSTRAINT')) throw new Error('Ya existe un usuario con ese email.');
+    if (e.code === '23505') throw new Error('Ya existe un usuario con ese email.');
     throw e;
   }
 })().catch(e => {
   console.error(`\n[ERROR] ${e.message}`);
-  process.exit(1);
-});
+  process.exitCode = 1;
+}).finally(() => db.close());

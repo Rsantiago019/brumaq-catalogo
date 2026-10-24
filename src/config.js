@@ -1,8 +1,9 @@
 'use strict';
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', '.env'), quiet: true });
-
 const root = path.join(__dirname, '..');
+require('dotenv').config({ path: path.join(root, '.env.local'), quiet: true });
+require('dotenv').config({ path: path.join(root, '.env'), quiet: true });
+
 const env = process.env;
 const abs = (p, fallback) => path.resolve(root, p || fallback);
 
@@ -10,10 +11,12 @@ module.exports = {
   root,
   isProd: env.NODE_ENV === 'production',
   port: Number(env.PORT) || 3000,
-  trustProxy: env.TRUST_PROXY === '1',
+  trustProxy: env.TRUST_PROXY === '1' || env.VERCEL === '1',
   jwtSecret: env.JWT_SECRET || '',
-  dbPath: abs(env.DB_PATH, './data/catalogo.db'),
-  uploadDir: abs(env.UPLOAD_DIR, './uploads'),
+  databaseUrl: env.DATABASE_URL || '',
+  blobToken: env.BLOB_READ_WRITE_TOKEN || '',
+  sourceDbPath: abs(env.SOURCE_DB_PATH, './data/catalogo.db'),
+  sourceUploadDir: abs(env.SOURCE_UPLOAD_DIR, './uploads'),
   email: {
     host: env.SMTP_HOST || '',
     port: Number(env.SMTP_PORT) || 0,
@@ -53,13 +56,13 @@ module.exports = {
   },
   limits: {
     maxImagesPerProduct: 8,
-    maxImageBytes: 5 * 1024 * 1024
+    maxImageBytes: 4 * 1024 * 1024
   },
   // Falla al arrancar si la clave de sesión es débil: nunca debe usarse un secreto por defecto.
   assertSecure() {
     if (!this.jwtSecret || this.jwtSecret.length < 32) {
       console.error(
-        '\n[ERROR] Falta JWT_SECRET en el archivo .env (mínimo 32 caracteres).\n' +
+        '\n[ERROR] Falta JWT_SECRET en el entorno (mínimo 32 caracteres).\n' +
           'Genere una con: node -e "console.log(require(\'crypto\').randomBytes(48).toString(\'hex\'))"\n'
       );
       process.exit(1);

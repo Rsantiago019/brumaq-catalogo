@@ -1,0 +1,33 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/handler.js": {
+      "includeFiles": "{public/**,views/**}"
+    }
+  },
+  "headers": [
+    {
+      "source": "/admin/reset-password.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/handler?__path=/api/:path*"
+    },
+    {
+      "source": "/admin/:path*",
+      "destination": "/api/handler?__path=/admin/:path*"
+    },
+    {
+      "source": "/admin",
+      "destination": "/api/handler?__path=/admin"
+    }
+  ]
+}

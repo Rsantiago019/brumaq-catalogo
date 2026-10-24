@@ -14,11 +14,11 @@ function slugify(text) {
 }
 
 // "table" es siempre una constante interna ('products' o 'categories'), nunca dato del usuario.
-function uniqueSlug(table, base, ignoreId = null) {
-  const q = db.prepare(`SELECT id FROM ${table} WHERE slug = ? AND id != ?`);
+async function uniqueSlug(table, base, ignoreId = null) {
+  const q = `SELECT id FROM ${table} WHERE slug = $1 AND id <> $2`;
   let slug = base;
   let i = 2;
-  while (q.get(slug, ignoreId ?? -1)) slug = `${base}-${i++}`;
+  while ((await db.query(q, [slug, ignoreId ?? -1])).rowCount) slug = `${base}-${i++}`;
   return slug;
 }
 

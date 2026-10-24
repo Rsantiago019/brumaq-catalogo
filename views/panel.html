@@ -14,12 +14,12 @@
 <body>
 <header class="bar">
   <div class="bar__in">
-    <img src="img/logo.png" alt="Brumaq" width="132" height="42">
+    <img src="/img/logo.png" alt="Brumaq" width="132" height="42">
     <span class="bar__title">Panel de administración</span>
     <span class="bar__spacer"></span>
     <span class="bar__user" id="userEmail"></span>
-    <button class="btn btn--ghost" id="catalog" type="button" onclick="window.location.href='/'">Ver catálogo</button>
-    <button class="btn btn--ghost" id="logout" type="button" onclick="logout()">Salir</button>
+    <a class="btn btn--ghost" id="catalog" href="/">Ver catálogo</a>
+    <button class="btn btn--ghost" id="logout" type="button">Salir</button>
   </div>
 </header>
 
@@ -95,7 +95,7 @@
       </form>
     </div>
 
-    <p class="hint">Si olvidó su contraseña, recupérela desde la consola del servidor con <code>npm run reset-password -- --email su@email.com</code>. Se le pedirá la nueva contraseña de forma oculta.</p>
+    <p class="hint">Si olvidó su contraseña, salga del panel y use «¿Olvidó su contraseña?» en la pantalla de acceso. La recuperación por email requiere que el servidor tenga SMTP configurado.</p>
   </section>
 </main>
 
@@ -137,7 +137,7 @@
       </fieldset>
 
       <fieldset>
-        <legend>Imágenes (JPG, PNG o WebP · máx. 5 MB · hasta 8)</legend>
+        <legend>Imágenes (JPG, PNG o WebP · máx. 4 MB cada una · hasta 8)</legend>
         <div class="thumbs" id="currentImages"></div>
         <input type="file" id="files" accept="image/jpeg,image/png,image/webp" multiple>
         <div class="thumbs" id="newImages"></div>
@@ -154,6 +154,6 @@
   </form>
 </dialog>
 
-<script src="admin/app.js"></script>
+<script src="/admin/app.js"></script>
 </body>
 </html>

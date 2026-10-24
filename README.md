@@ -1,125 +1,145 @@
-# Catálogo digital de maquinaria agrícola
+# Catálogo digital Brumaq
 
-Plataforma con **catálogo público**, **panel de administración** (CRUD de productos con imágenes) y
-**botón de WhatsApp** por producto. **No muestra precios** (el esquema ni siquiera tiene esa columna).
+Catálogo público de maquinaria agrícola con panel de administración, gestión de productos e imágenes y recuperación de contraseña por correo. El proyecto está preparado para desplegarse en Vercel con Express Functions, Neon Postgres y Vercel Blob.
 
-**Stack:** Node.js 18+ · Express 5 · SQLite (`better-sqlite3`) · bcrypt (`bcryptjs`) · JWT en cookie httpOnly · Multer · Helmet.
-Frontend sin frameworks (HTML + CSS + JS, GSAP opcional para animar las tarjetas).
+**Tecnologías:** Node.js 20+ · Express 5 · PostgreSQL · Vercel Blob · JWT en cookie `httpOnly` · bcrypt · Helmet.
 
----
+## Arquitectura y persistencia
 
-## 1. Puesta en marcha
+- Vercel sirve el catálogo estático y ejecuta el backend Express como Function para las rutas API y administrativas.
+- Neon Postgres guarda cuentas, sesiones revocables, categorías, productos y referencias a imágenes.
+- Vercel Blob guarda las imágenes públicas. La aplicación valida tipo MIME y firma del archivo antes de subirlo.
+- Las funciones de Vercel no usan archivos locales como almacenamiento persistente.
+
+## Configuración inicial
+
+1. Instalar dependencias:
+
+   ```bash
+   npm install
+   ```
+
+2. En el proyecto de Vercel, agregar Neon desde **Storage / Marketplace** y crear un almacén de Vercel Blob. Confirmar que estén disponibles `DATABASE_URL` y `BLOB_READ_WRITE_TOKEN`.
+3. Configurar en Vercel, para Production y Preview según corresponda:
+   - `NODE_ENV=production`
+   - `JWT_SECRET`: secreto aleatorio, exclusivo de producción, mínimo 32 caracteres.
+   - `DATABASE_URL`: cadena de conexión de Neon (preferir la cadena pooled).
+   - `BLOB_READ_WRITE_TOKEN`: token de escritura del almacén Blob.
+   - `PUBLIC_BASE_URL`: dominio HTTPS público, sin barra final.
+   - `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD` y `EMAIL_FROM` para recuperación por email.
+   - Variables opcionales del negocio: `BUSINESS_NAME`, `WHATSAPP_NUMBER`, `WHATSAPP_MESSAGE`, `INSTAGRAM` y `MAP_QUERY`.
+4. Conectar el repositorio y desplegarlo en Vercel. El archivo `vercel.json` enruta `/api/*` y las páginas dinámicas `/admin/*` al backend. Las páginas estáticas, incluido `/admin/reset-password.html`, se sirven desde `public/`.
+5. Comprobar `https://<dominio>/api/health`. Debe responder `{"ok":true}`.
+6. Abrir `/admin/login` y crear la primera cuenta. El formulario de configuración inicial deja de estar disponible una vez creada.
+
+Generar un secreto localmente:
 
 ```bash
-npm install
-cp .env.example .env            # y complete JWT_SECRET, WHATSAPP_NUMBER, etc.
-npm run create-admin            # registra al administrador (la clave se guarda hasheada)
-npm run seed                    # (opcional) carga productos de ejemplo
-npm start                       # http://localhost:3000   ·   panel: /admin
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
 
-Generar una clave de sesión: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`
+Para desarrollo local, copiar `.env.example` a `.env.local`, completar `DATABASE_URL`, `BLOB_READ_WRITE_TOKEN`, `JWT_SECRET` y las demás variables. El archivo `.env.local` se carga automáticamente. `npm start` inicializa el esquema en Neon y sirve la aplicación en `http://localhost:3000`.
 
-La primera cuenta también puede crearse desde `/admin/login` si todavía no hay usuarios. Una vez creada, el registro público queda cerrado. Desde **Cuentas** en el panel, un administrador puede crear otras cuentas y cualquier usuario puede cambiar su propia contraseña.
+## Migrar la base SQLite existente
 
-Para habilitar **¿Olvidó su contraseña?**, configure `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, `EMAIL_FROM` y `PUBLIC_BASE_URL` en `.env` (hay ejemplos en `.env.example`) y reinicie el servidor. `PUBLIC_BASE_URL` debe ser la URL pública de la aplicación, sin una barra final; en producción, use HTTPS. El enlace es de un solo uso, vence en 30 minutos, y el cambio cierra las sesiones existentes. Si el correo no está configurado, puede restablecerla desde la consola con `npm run reset-password -- --email administrador@empresa.com`.
+La migración copia las cuentas (incluidos los hashes de contraseña), categorías, productos y referencias de imágenes al Neon configurado. Las imágenes se suben a Blob. La migración **se detiene si la base de destino ya contiene cuentas, categorías o productos**.
 
-Otros comandos: `npm run dev` (reinicio automático) · `npm run seed -- --reset`.
+1. Provisionar Neon y Blob, configurar `DATABASE_URL` y `BLOB_READ_WRITE_TOKEN` en `.env.local`.
+2. Detener la aplicación antigua y realizar una copia de seguridad de `data/catalogo.db` y `uploads/`.
+3. Mantener la base SQLite y las imágenes originales en las rutas locales por defecto, o indicar otras rutas con `SOURCE_DB_PATH` y `SOURCE_UPLOAD_DIR`.
+4. Ejecutar desde la raíz:
 
----
+   ```bash
+   npm run migrate:vercel
+   ```
 
-## 2. Estructura
+5. Revisar el resumen de migración y probar el login, los productos e imágenes en una vista previa antes de cambiar el dominio.
+6. Solicitar un enlace nuevo de recuperación después de la migración. No compartir enlaces que contengan tokens.
 
+No borrar la base ni los archivos originales hasta verificar la migración y conservar una copia de seguridad restaurable.
+
+## Primer administrador y operaciones
+
+También se puede crear el primer administrador desde `/admin/login`. Para crear cuentas adicionales se usa el panel (**Cuentas**), accesible solo a administradores.
+
+Los scripts administrativos se conectan a `DATABASE_URL`:
+
+```bash
+npm run create-admin
+npm run reset-password
+npm run seed
+npm run seed -- --reset
 ```
-server.js                 Arranque, seguridad (Helmet/CSP), rutas y páginas protegidas
-src/config.js             Variables de entorno
-src/db.js                 Conexión SQLite + esquema
-src/security.js           Hasheo y validación de contraseñas (bcrypt)
-src/auth.js               Sesión (JWT en cookie), middleware de protección y CSRF
-src/upload.js             Subida de imágenes con validación de tipo y firma
-src/routes/public.js      API pública de solo lectura (catálogo)
-src/routes/auth.js        Login / logout / sesión actual
-src/routes/admin.js       CRUD de productos y de tipos (protegido)
-scripts/                  create-admin, reset-password, seed
-public/                   Catálogo público (index.html, css, js, img)
-views/                    Panel de administración (solo se entrega con sesión válida)
+
+Los comandos de seed son solo para demostración: agregan productos de ejemplo con una imagen de placeholder.
+
+## Recuperación de contraseña
+
+El formulario está publicado en `/admin/reset-password.html`. Para que el flujo funcione se necesita configurar SMTP y desplegar el backend y la base Neon. Los tokens son aleatorios, se almacena su hash, vencen en 30 minutos, se usan una sola vez y al completar el cambio se revocan las sesiones anteriores.
+
+## Prueba de integración
+
+`npm run test:smoke` comprueba contra los servicios configurados el login de administrador, alta y acceso de una cuenta, recuperación completa de contraseña con envío SMTP, y alta/consulta/baja de un producto con imagen en Vercel Blob. Al terminar, elimina la cuenta, categoría, producto e imagen temporales.
+
+La prueba **escribe datos y envía un correo real** al buzón de prueba. Use un buzón dedicado que no exista todavía como cuenta y credenciales de administrador válidas. Configure en `.env.local`:
+
+```text
+SMOKE_TEST_ADMIN_EMAIL=admin@ejemplo.com
+SMOKE_TEST_ADMIN_PASSWORD=contraseña-del-administrador
+SMOKE_TEST_EMAIL=buzon-de-prueba@ejemplo.com
+SMOKE_TEST_ALLOW_WRITES=YES
 ```
 
----
+La configuración habitual de `DATABASE_URL`, `JWT_SECRET`, `BLOB_READ_WRITE_TOKEN`, SMTP y `PUBLIC_BASE_URL` también debe estar disponible. La prueba se ejecuta contra esos servicios reales; no la apunte a una base o almacén que no pueda recibir datos temporales.
 
-## 3. Base de datos
+Para autorizar explícitamente la escritura y confirmar que los servicios configurados podrían ser de producción:
 
-| Tabla | Campos principales |
-|---|---|
-| **users** | `id`, `email` (único), `password_hash` (bcrypt), `role` (admin/editor), `token_version`, `last_login_at`, `created_at` |
-| **categories** *(tipos de producto)* | `id`, `name` (único), `slug` (único), `position` |
-| **products** | `id`, `name`, `slug` (único), `category_id` → categories, `description`, `specs` (JSON), `status` (`active`/`inactive`), `created_at`, `updated_at` |
-| **product_images** | `id`, `product_id` → products (borrado en cascada), `filename`, `position` |
+```bash
+npm run test:smoke -- --confirm-writes --allow-production-writes
+```
 
-`specs` guarda una lista de pares, por ejemplo: `[{"label":"Potencia","value":"110 HP"},{"label":"Tracción","value":"4x4"}]`.
-Los tipos de producto (Tractores, Trilladoras, Cosechadoras…) se administran desde el panel y alimentan los filtros del catálogo.
+Además, defina `SMOKE_TEST_ALLOW_WRITES=YES`. Ambas confirmaciones son obligatorias en cada ejecución porque el script no puede determinar si las credenciales apuntan a producción. La limpieza se intenta incluso si falla una verificación; revise la salida si se informa un error de limpieza.
 
----
+## Imágenes
 
-## 4. API
+El panel acepta JPG, PNG y WebP de hasta **4 MB por imagen**, con un máximo de ocho imágenes por producto. Cada imagen se envía por separado para mantenerse bajo el límite de payload de las Functions de Vercel y se almacena en Blob. El panel valida firmas reales del archivo antes de subirlo.
 
-**Pública** (solo productos `active`)
+## API
+
+**Pública**
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| GET | `/api/config` | Nombre, WhatsApp, plantilla del mensaje |
-| GET | `/api/categories` | Tipos con al menos un producto activo y su cantidad |
-| GET | `/api/products?category=<slug>` | Listado, con filtro opcional por tipo |
-| GET | `/api/products/:slug` | Detalle |
+| GET | `/api/health` | Comprobar conexión con la base |
+| GET | `/api/config` | Nombre, WhatsApp, Instagram y mapa |
+| GET | `/api/categories` | Categorías con productos activos |
+| GET | `/api/products?category=<slug>` | Catálogo público |
+| GET | `/api/products/:slug` | Detalle de un producto |
 
-**Sesión:** `POST /api/auth/login` · `POST /api/auth/logout` · `GET /api/auth/me` · `POST /api/auth/password-recovery` · `POST /api/auth/password-reset` · creación inicial limitada a instalación sin usuarios: `GET /api/auth/setup-status`, `POST /api/auth/setup`
+**Autenticación**
 
-**Administración** (requiere sesión; las escrituras exigen el encabezado `X-Requested-With: fetch`)
+`GET /api/auth/setup-status` · `POST /api/auth/setup` · `POST /api/auth/login` · `POST /api/auth/logout` · `GET /api/auth/me` · `GET /api/auth/recovery-status` · `POST /api/auth/password-recovery` · `POST /api/auth/password-reset`
+
+**Administración** (requiere sesión; las escrituras exigen `X-Requested-With: fetch`)
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| GET / POST | `/api/admin/products` | Listar todos / crear (`multipart/form-data`, campo `images`) |
-| GET / PUT / DELETE | `/api/admin/products/:id` | Ver / actualizar (solo los campos enviados; `remove_images=[ids]`) / borrar |
-| GET / POST | `/api/admin/categories` | Listar / crear tipo |
-| PUT / DELETE | `/api/admin/categories/:id` | Renombrar / borrar (se bloquea si tiene productos) |
-| POST | `/api/admin/users` | Crear otra cuenta de administrador (solo administrador) |
-| PUT | `/api/admin/password` | Cambiar la contraseña propia; revoca las sesiones activas |
+| GET / POST | `/api/admin/products` | Listar / crear producto |
+| GET / PUT / DELETE | `/api/admin/products/:id` | Ver / actualizar / eliminar producto |
+| GET / POST | `/api/admin/categories` | Listar / crear categoría |
+| PUT / DELETE | `/api/admin/categories/:id` | Renombrar / eliminar categoría |
+| POST | `/api/admin/users` | Crear cuenta (solo administrador) |
+| PUT | `/api/admin/password` | Cambiar contraseña propia |
+| POST / DELETE | `/api/admin/uploads` | Subir / limpiar imágenes temporales |
 
----
+## Seguridad y operación
 
-## 5. Seguridad implementada
+- Contraseñas con bcrypt (costo 12), mínimo 10 caracteres, letras y números, máximo 72 bytes.
+- Cookie de sesión `httpOnly`, `SameSite=Strict`, `Secure` en producción y vencimiento a las 8 horas.
+- CSRF: encabezado propio y verificación de `Origin` en solicitudes de escritura.
+- Consultas SQL parametrizadas, límites de frecuencia en login y recuperación, y tokens de recuperación de un solo uso.
+- Los productos inactivos no aparecen en rutas públicas.
+- Mantener una copia de seguridad externa de Neon y Blob. Probar restauración antes de depender de las copias.
+- Revisar logs y errores de las Functions tras cada despliegue. Los limitadores de frecuencia actuales usan memoria por instancia; para protección compartida entre instancias, configurar un almacenamiento distribuido antes de una exposición de alto tráfico.
 
-- **Contraseñas con bcrypt (costo 12)**, con sal automática. Nunca se guardan ni se registran en texto plano. Mínimo 10 caracteres, letras y números, máximo 72 bytes (límite de bcrypt).
-- **Registro restringido:** la primera cuenta puede crearse desde el login solo mientras no exista ningún usuario; luego únicamente un administrador autenticado puede crear cuentas. La recuperación por correo usa tokens aleatorios de un solo uso, guarda solo el hash, vence a los 30 minutos, responde sin revelar si existe el email y revoca las sesiones. También queda disponible el restablecimiento por consola como alternativa.
-- **Login resistente a enumeración:** mensaje genérico y tiempo de respuesta igual exista o no el email. **Límite de 10 intentos fallidos cada 15 min por IP.**
-- **Sesión** en cookie `httpOnly` + `SameSite=Strict` (+ `Secure` en producción), expira a las 8 h. Cada pedido revalida al usuario en la base; **cerrar sesión invalida el token** (`token_version`).
-- **CSRF:** `SameSite=Strict` + encabezado propio obligatorio + verificación de `Origin`.
-- **Subida de archivos:** solo JPG/PNG/WebP, máx. 5 MB y 8 por producto, nombre aleatorio, verificación de la **firma real** del archivo, y `/uploads` se sirve con CSP restrictiva y `nosniff`.
-- **SQL parametrizado** en todas las consultas. **XSS:** el frontend inserta datos con `textContent`; además hay CSP estricta (sin scripts inline).
-- Los productos **inactivos** no se exponen en ninguna ruta pública.
-
----
-
-## 6. Botón de WhatsApp
-
-El mensaje se arma con una plantilla del `.env`:
-
-```
-WHATSAPP_MESSAGE=Hola, estoy interesado en obtener más información sobre {producto} ({categoria}) que vi en su web.
-```
-
-Variables: `{producto}`, `{categoria}` y `{url}` (enlace directo a la ficha). El código está en `public/js/catalog.js` → `waLink(product)`.
-`WHATSAPP_NUMBER` va en formato internacional sin `+` ni espacios (ej. `5492945123456`).
-
----
-
-## 7. Producción
-
-1. Servir detrás de **HTTPS** (Nginx/Caddy/Cloudflare) y poner `NODE_ENV=production` y `TRUST_PROXY=1`.
-2. Mantener un `JWT_SECRET` largo y secreto; cambiarlo cierra todas las sesiones.
-3. Hacer **copias de seguridad** de `data/` (base) y `uploads/` (imágenes).
-4. Mantener la app con un gestor de procesos (pm2, systemd) y actualizar dependencias (`npm audit`).
-
-### Cambiar de base de datos
-Las consultas están aisladas en `src/db.js` y `src/routes/*`. Para **MySQL/PostgreSQL** se reemplaza `better-sqlite3` por `mysql2`/`pg` (las consultas son SQL estándar).
-Para **MongoDB** (Mongoose): `User`, `Category`, `Product` con `images: [String]` y `specs: [{label, value}]` incrustados, y los mismos controladores.
+Para la lista de pasos de publicación y sus verificaciones, consultar [DEPLOYMENT-CHECKLIST.md](./DEPLOYMENT-CHECKLIST.md).

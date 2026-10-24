@@ -6,8 +6,6 @@ const config = require('./config');
 const COOKIE = 'brumaq_session';
 const TTL_HOURS = 8;
 
-const getUserById = db.prepare('SELECT id, email, role, token_version FROM users WHERE id = ?');
-
 function cookieOptions() {
   return {
     httpOnly: true,                 // JavaScript del navegador no puede leer la cookie (mitiga XSS)
@@ -26,30 +24,32 @@ function signToken(user) {
 }
 
 /** Devuelve el usuario de la sesión o null. Revalida contra la base en cada pedido. */
-function readUser(req) {
+async function readUser(req) {
   const token = req.cookies && req.cookies[COOKIE];
   if (!token) return null;
+  let payload;
   try {
-    const payload = jwt.verify(token, config.jwtSecret, { algorithms: ['HS256'] });
-    const user = getUserById.get(payload.sub);
-    if (!user || user.token_version !== payload.tv) return null; // usuario borrado o sesión revocada
-    return user;
+    payload = jwt.verify(token, config.jwtSecret, { algorithms: ['HS256'] });
   } catch {
     return null;
   }
+  const result = await db.query('SELECT id, email, role, token_version FROM users WHERE id = $1', [payload.sub]);
+  const user = result.rows[0];
+  if (!user || user.token_version !== payload.tv) return null;
+  return user;
 }
 
 /** Protege rutas de la API: responde 401 si no hay sesión válida. */
-function authRequired(req, res, next) {
-  const user = readUser(req);
+async function authRequired(req, res, next) {
+  const user = await readUser(req);
   if (!user) return res.status(401).json({ error: 'Sesión no válida. Inicie sesión nuevamente.' });
   req.user = user;
   next();
 }
 
 /** Protege páginas HTML del panel: redirige al login. */
-function authPage(req, res, next) {
-  const user = readUser(req);
+async function authPage(req, res, next) {
+  const user = await readUser(req);
   if (!user) return res.redirect('/admin/login');
   req.user = user;
   next();

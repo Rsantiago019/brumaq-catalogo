@@ -21,8 +21,16 @@ form.addEventListener('submit', async event => {
       credentials: 'same-origin',
       body: JSON.stringify({ token, password })
     });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || 'No se pudo restablecer la contraseña.');
+    const data = await response.json().catch(() => null);
+    if (!response.ok) {
+      throw new Error(
+        data?.error ||
+          (response.status === 404
+            ? 'El servicio de restablecimiento no está disponible en este sitio.'
+            : 'No se pudo restablecer la contraseña.')
+      );
+    }
+    if (!data?.ok) throw new Error('El servidor devolvió una respuesta inválida.');
     form.hidden = true;
     errorBox.className = 'hint';
     errorBox.textContent = 'Contraseña actualizada. Ya puede ingresar con su nueva contraseña.';

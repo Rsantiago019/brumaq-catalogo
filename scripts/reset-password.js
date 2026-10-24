@@ -6,6 +6,7 @@
 const db = require('../src/db');
 const { hashPassword, passwordIssues } = require('../src/security');
 const readline = require('readline');
+const { close } = db;
 
 const arg = n => { const i = process.argv.indexOf(`--${n}`); return i > -1 ? process.argv[i + 1] : undefined; };
 function ask(question, { hidden = false } = {}) {
@@ -26,6 +27,7 @@ function ask(question, { hidden = false } = {}) {
 }
 
 (async () => {
+  await db.initialize();
   const email = (arg('email') || (await ask('Email de la cuenta: '))).trim().toLowerCase();
   if (email.length > 254 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error('Email inválido.');
   let password = arg('password');
@@ -37,7 +39,10 @@ function ask(question, { hidden = false } = {}) {
   const issues = passwordIssues(password);
   if (issues.length) throw new Error(issues.join(' '));
   const hash = await hashPassword(password);
-  const info = db.prepare('UPDATE users SET password_hash = ?, token_version = token_version + 1 WHERE email = ?').run(hash, email);
-  if (!info.changes) throw new Error('No existe un usuario con ese email.');
+  const result = await db.query(
+    'UPDATE users SET password_hash = $1, token_version = token_version + 1 WHERE LOWER(email) = $2',
+    [hash, email]
+  );
+  if (!result.rowCount) throw new Error('No existe un usuario con ese email.');
   console.log(`Contraseña actualizada para ${email}. Las sesiones anteriores fueron cerradas.`);
-})().catch(e => { console.error(`[ERROR] ${e.message}`); process.exit(1); });
+})().catch(e => { console.error(`[ERROR] ${e.message}`); process.exitCode = 1; }).finally(close);

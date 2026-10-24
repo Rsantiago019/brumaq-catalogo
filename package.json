@@ -5,18 +5,21 @@
   "main": "server.js",
   "private": true,
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
     "create-admin": "node scripts/create-admin.js",
     "seed": "node scripts/seed.js",
-    "reset-password": "node scripts/reset-password.js"
+    "reset-password": "node scripts/reset-password.js",
+    "test:smoke": "node scripts/smoke-test.js",
+    "migrate:vercel": "node scripts/migrate-to-vercel.js"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.2.0",
+    "@vercel/blob": "^2.0.0",
     "bcryptjs": "^3.0.3",
-    "better-sqlite3": "^13.0.3",
     "cookie-parser": "^1.4.7",
     "dotenv": "^18.0.8",
     "express": "^5.3.0",
@@ -24,6 +27,10 @@
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.4.0",
-    "nodemailer": "^10.1.7"
+    "nodemailer": "^10.1.7",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "better-sqlite3": "^13.0.3"
   }
 }

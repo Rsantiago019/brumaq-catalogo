@@ -1,67 +1,65 @@
 'use strict';
-const fs = require('fs');
-const path = require('path');
 const crypto = require('crypto');
 const multer = require('multer');
+const { put, del } = require('@vercel/blob');
 const config = require('./config');
 
 const EXT_BY_MIME = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, config.uploadDir),
-  // Nombre aleatorio y extensión según el tipo MIME permitido: se ignora el nombre original del usuario.
-  filename: (req, file, cb) => cb(null, crypto.randomBytes(16).toString('hex') + EXT_BY_MIME[file.mimetype])
-});
-
 const uploader = multer({
-  storage,
-  limits: { fileSize: config.limits.maxImageBytes, files: config.limits.maxImagesPerProduct },
-  fileFilter: (req, file, cb) =>
-    EXT_BY_MIME[file.mimetype] ? cb(null, true) : cb(new Error('Solo se permiten imágenes JPG, PNG o WebP.'))
-}).array('images', config.limits.maxImagesPerProduct);
+  storage: multer.memoryStorage(),
+  limits: { fileSize: config.limits.maxImageBytes }
+}).single('image');
 
-/** Comprueba los primeros bytes del archivo (firma real), no solo el tipo MIME declarado. */
-function hasImageSignature(filePath) {
-  const fd = fs.openSync(filePath, 'r');
-  const b = Buffer.alloc(12);
-  fs.readSync(fd, b, 0, 12, 0);
-  fs.closeSync(fd);
-  const jpeg = b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff;
-  const png = b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
-  const webp = b.subarray(0, 4).toString('latin1') === 'RIFF' && b.subarray(8, 12).toString('latin1') === 'WEBP';
+function hasImageSignature(buffer) {
+  const jpeg = buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  const png = buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  const webp = buffer.subarray(0, 4).toString('latin1') === 'RIFF' && buffer.subarray(8, 12).toString('latin1') === 'WEBP';
   return jpeg || png || webp;
 }
 
-function removeFiles(names = []) {
-  for (const name of names) {
-    try {
-      fs.unlinkSync(path.join(config.uploadDir, path.basename(name)));
-    } catch {
-      /* ya no existe */
-    }
-  }
-}
-
-/** Middleware: procesa "images[]" (multipart) y valida cada archivo. Si es JSON, lo deja pasar. */
 function imageUpload(req, res, next) {
-  uploader(req, res, err => {
-    if (err) {
-      removeFiles((req.files || []).map(f => f.filename));
-      const msg =
-        err.code === 'LIMIT_FILE_SIZE'
-          ? 'Cada imagen puede pesar como máximo 5 MB.'
-          : err.code === 'LIMIT_FILE_COUNT' || err.code === 'LIMIT_UNEXPECTED_FILE'
-            ? `Máximo ${config.limits.maxImagesPerProduct} imágenes por producto.`
-            : err.message;
-      return res.status(400).json({ error: msg });
+  uploader(req, res, async error => {
+    if (error) {
+      const message = error.code === 'LIMIT_FILE_SIZE'
+        ? 'Cada imagen puede pesar como máximo 4 MB.'
+        : 'No se pudo recibir la imagen.';
+      return res.status(400).json({ error: message });
     }
-    const files = req.files || [];
-    if (files.some(f => !hasImageSignature(f.path))) {
-      removeFiles(files.map(f => f.filename));
-      return res.status(400).json({ error: 'Uno de los archivos no es una imagen válida.' });
+    const file = req.file;
+    if (!file) return res.status(400).json({ error: 'Seleccione una imagen.' });
+    const extension = EXT_BY_MIME[file.mimetype];
+    if (!extension || !hasImageSignature(file.buffer)) {
+      return res.status(400).json({ error: 'El archivo no es una imagen JPG, PNG o WebP válida.' });
     }
-    next();
+    try {
+      if (!config.blobToken) throw new Error('Falta BLOB_READ_WRITE_TOKEN para almacenar imágenes.');
+      const blob = await put(
+        `product-images/${crypto.randomBytes(16).toString('hex')}${extension}`,
+        file.buffer,
+        { access: 'public', contentType: file.mimetype, token: config.blobToken }
+      );
+      req.uploadedImage = { url: blob.url, pathname: blob.pathname };
+      next();
+    } catch (uploadError) {
+      next(uploadError);
+    }
   });
 }
 
-module.exports = { imageUpload, removeFiles };
+async function removeFiles(urls = []) {
+  const validUrls = urls.filter(url => isManagedImageUrl(url));
+  if (validUrls.length) await del(validUrls, { token: config.blobToken });
+}
+
+function isManagedImageUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' &&
+      url.hostname.endsWith('public.blob.vercel-storage.com') &&
+      url.pathname.startsWith('/product-images/');
+  } catch {
+    return false;
+  }
+}
+
+module.exports = { imageUpload, removeFiles, isManagedImageUrl };

@@ -39,7 +39,7 @@ function toast(msg, isError = false) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => (t.className = 'toast'), 4500);
 }
-const fmtDate = s => new Date(s.replace(' ', 'T') + 'Z').toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+const fmtDate = value => new Date(value).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
 /* ---------- Sesión / pestañas ---------- */
 async function loadSession() {
@@ -193,7 +193,7 @@ $('#files').addEventListener('change', e => {
   const ok = ['image/jpeg', 'image/png', 'image/webp'];
   for (const f of e.target.files) {
     if (!ok.includes(f.type)) { toast(`"${f.name}": formato no permitido.`, true); continue; }
-    if (f.size > 5 * 1024 * 1024) { toast(`"${f.name}" supera los 5 MB.`, true); continue; }
+    if (f.size > 4 * 1024 * 1024) { toast(`"${f.name}" supera los 4 MB.`, true); continue; }
     if (keptCount() >= MAX_IMAGES) { toast(`Máximo ${MAX_IMAGES} imágenes.`, true); break; }
     state.newFiles.push(f);
   }
@@ -233,19 +233,29 @@ form.addEventListener('submit', async e => {
   if (form.elements.name.value.trim().length < 2) { err.textContent = 'Ingrese el nombre del producto.'; form.elements.name.focus(); return; }
   if (readSpecs().some(s => !s.label || !s.value)) { err.textContent = 'Complete nombre y valor de cada característica, o quite la fila vacía.'; return; }
 
-  const fd = new FormData();
-  fd.append('name', form.elements.name.value.trim());
-  fd.append('category_id', form.category_id.value);
-  fd.append('status', form.status.value);
-  fd.append('description', form.description.value);
-  fd.append('specs', JSON.stringify(readSpecs()));
-  if (state.editing) fd.append('remove_images', JSON.stringify([...state.removeIds]));
-  state.newFiles.forEach(f => fd.append('images', f));
-
   $('#pdSave').disabled = true;
+  const uploaded = [];
+  let saved = false;
   try {
+    for (const file of state.newFiles) {
+      const formData = new FormData();
+      formData.append('image', file);
+      const result = await api('/api/admin/uploads', { method: 'POST', form: formData });
+      uploaded.push(result.image.url);
+    }
+
+    const json = {
+      name: form.elements.name.value.trim(),
+      category_id: form.category_id.value,
+      status: form.status.value,
+      description: form.description.value,
+      specs: readSpecs(),
+      images: uploaded
+    };
+    if (state.editing) json.remove_images = [...state.removeIds];
     const url = state.editing ? `/api/admin/products/${state.editing.id}` : '/api/admin/products';
-    await api(url, { method: state.editing ? 'PUT' : 'POST', form: fd });
+    await api(url, { method: state.editing ? 'PUT' : 'POST', json });
+    saved = true;
     dlg.close();
     toast(state.editing ? 'Producto actualizado.' : 'Producto creado.');
     await loadProducts();
@@ -253,6 +263,10 @@ form.addEventListener('submit', async e => {
   } catch (e2) {
     err.textContent = e2.message;
   } finally {
+    if (!saved && uploaded.length) {
+      try { await api('/api/admin/uploads', { method: 'DELETE', json: { urls: uploaded } }); }
+      catch (cleanupError) { console.error('No se pudieron limpiar las imágenes temporales:', cleanupError); }
+    }
     $('#pdSave').disabled = false;
   }
 });
