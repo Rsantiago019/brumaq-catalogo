@@ -32,11 +32,10 @@ function imageUpload(req, res, next) {
       return res.status(400).json({ error: 'El archivo no es una imagen JPG, PNG o WebP válida.' });
     }
     try {
-      if (!config.blobToken) throw new Error('Falta BLOB_READ_WRITE_TOKEN para almacenar imágenes.');
       const blob = await put(
         `product-images/${crypto.randomBytes(16).toString('hex')}${extension}`,
         file.buffer,
-        { access: 'public', contentType: file.mimetype, token: config.blobToken }
+        { access: 'public', contentType: file.mimetype }
       );
       req.uploadedImage = { url: blob.url, pathname: blob.pathname };
       next();
@@ -48,7 +47,7 @@ function imageUpload(req, res, next) {
 
 async function removeFiles(urls = []) {
   const validUrls = urls.filter(url => isManagedImageUrl(url));
-  if (validUrls.length) await del(validUrls, { token: config.blobToken });
+  if (validUrls.length) await del(validUrls);
 }
 
 function isManagedImageUrl(value) {

@@ -19,7 +19,7 @@ Catálogo público de maquinaria agrícola con panel de administración, gestió
    npm install
    ```
 
-2. En el proyecto de Vercel, agregar Neon desde **Storage / Marketplace** y crear un almacén de Vercel Blob. Confirmar que estén disponibles `DATABASE_URL` y `BLOB_READ_WRITE_TOKEN`.
+2. En el proyecto de Vercel, agregar Neon desde **Storage / Marketplace** y conectar un almacén público de Vercel Blob al entorno Production. Confirmar que estén disponibles `DATABASE_URL` y `BLOB_STORE_ID`; Vercel Blob usa OIDC en producción y el SDK conserva `BLOB_READ_WRITE_TOKEN` como alternativa local.
 3. Configurar en Vercel, para Production y Preview según corresponda:
    - `NODE_ENV=production`
    - `JWT_SECRET`: secreto aleatorio, exclusivo de producción, mínimo 32 caracteres.
@@ -38,7 +38,7 @@ Generar un secreto localmente:
 node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
 
-Para desarrollo local, copiar `.env.example` a `.env.local`, completar `DATABASE_URL`, `BLOB_READ_WRITE_TOKEN`, `JWT_SECRET` y las demás variables. El archivo `.env.local` se carga automáticamente. `npm start` inicializa el esquema en Neon y sirve la aplicación en `http://localhost:3000`.
+Para desarrollo local, copiar `.env.example` a `.env.local`, completar `DATABASE_URL`, un `BLOB_READ_WRITE_TOKEN` válido para el almacén conectado, `JWT_SECRET` y las demás variables. El archivo `.env.local` se carga automáticamente. `npm start` inicializa el esquema en Neon y sirve la aplicación en `http://localhost:3000`.
 
 ## Migrar la base SQLite existente
 

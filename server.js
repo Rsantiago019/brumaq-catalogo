@@ -67,6 +67,11 @@ app.get('/admin/app.js', noStore, authPage, (req, res) => res.sendFile(path.join
 app.use((err, req, res, next) => {
   console.error(err);
   if (res.headersSent) return next(err);
+  if (req.path.startsWith('/api') && err.name === 'BlobStoreNotFoundError') {
+    return res.status(503).json({
+      error: 'El almacén de imágenes no está disponible. Verifique que Vercel Blob esté conectado a este proyecto y al entorno actual.'
+    });
+  }
   if (req.path.startsWith('/api')) return res.status(500).json({ error: 'Error interno del servidor.' });
   res.status(500).send('Error interno del servidor.');
 });
