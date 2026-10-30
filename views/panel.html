@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Saira:ital,wdth,wght@0,75..125,400..900;1,75..125,400..900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/admin.css">
+<link rel="stylesheet" href="/admin/sweetalert2.min.css">
 </head>
 <body>
 <header class="bar">
@@ -154,21 +155,7 @@
   </form>
 </dialog>
 
-<dialog id="confirmDialog" aria-labelledby="confirmTitle" aria-describedby="confirmMessage">
-  <form id="confirmForm" method="dialog">
-    <div class="dlg__head">
-      <h2 id="confirmTitle">Confirmar acción</h2>
-    </div>
-    <div class="dlg__body">
-      <p id="confirmMessage"></p>
-    </div>
-    <div class="dlg__foot">
-      <button class="btn btn--ghost" type="submit" value="cancel">Cancelar</button>
-      <button class="btn btn--danger" type="submit" id="confirmAccept" value="confirm">Borrar</button>
-    </div>
-  </form>
-</dialog>
-
+<script src="/admin/sweetalert2.min.js"></script>
 <script src="/admin/app.js"></script>
 </body>
 </html>

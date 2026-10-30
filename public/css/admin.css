@@ -418,15 +418,6 @@ dialog::backdrop {
   max-height: 94vh;
 }
 
-#confirmDialog {
-  max-width: min(480px, 96vw);
-}
-
-#confirmForm {
-  display: flex;
-  flex-direction: column;
-}
-
 .dlg__head,
 .dlg__foot {
   display: flex;

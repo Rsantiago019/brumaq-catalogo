@@ -62,6 +62,13 @@ app.get('/admin/reset-password', noStore, async (req, res) =>
 );
 app.get('/admin', noStore, authPage, (req, res) => res.sendFile(path.join(config.viewsDir, 'panel.html')));
 app.get('/admin/app.js', noStore, authPage, (req, res) => res.sendFile(path.join(config.viewsDir, 'admin.js')));
+const sweetAlertDist = path.dirname(require.resolve('sweetalert2'));
+app.get('/admin/sweetalert2.min.js', noStore, (req, res) =>
+  res.sendFile(path.join(sweetAlertDist, 'sweetalert2.min.js'))
+);
+app.get('/admin/sweetalert2.min.css', noStore, (req, res) =>
+  res.sendFile(path.join(sweetAlertDist, 'sweetalert2.min.css'))
+);
 
 // Manejo central de errores (no se filtran detalles internos al cliente)
 app.use((err, req, res, next) => {

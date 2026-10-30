@@ -39,15 +39,18 @@ function toast(msg, isError = false) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => (t.className = 'toast'), 4500);
 }
-function confirmAction(title, message, acceptLabel = 'Borrar') {
-  const dialog = $('#confirmDialog');
-  $('#confirmTitle').textContent = title;
-  $('#confirmMessage').textContent = message;
-  $('#confirmAccept').textContent = acceptLabel;
-  dialog.showModal();
-  return new Promise(resolve => {
-    dialog.addEventListener('close', () => resolve(dialog.returnValue === 'confirm'), { once: true });
+async function confirmAction(title, message, acceptLabel = 'Borrar') {
+  const result = await Swal.fire({
+    title,
+    text: message,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: acceptLabel,
+    cancelButtonText: 'Cancelar',
+    reverseButtons: true,
+    focusCancel: true
   });
+  return result.isConfirmed;
 }
 const fmtDate = value => new Date(value).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
