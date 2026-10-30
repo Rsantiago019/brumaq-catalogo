@@ -9,6 +9,12 @@ const { imageUpload, removeFiles, isManagedImageUrl } = require('../upload');
 const router = express.Router();
 const MAX_IMAGES = config.limits.maxImagesPerProduct;
 
+router.get('/users', async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Solo un administrador puede ver las cuentas.' });
+  const { rows } = await db.query('SELECT id, email, role FROM users ORDER BY LOWER(email), id');
+  res.json({ users: rows, currentUserId: req.user.id });
+});
+
 router.post('/users', async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Solo un administrador puede crear cuentas.' });
 
@@ -32,6 +38,33 @@ router.post('/users', async (req, res) => {
     throw error;
   }
   res.status(201).json({ user: { email, role: 'admin' } });
+});
+
+router.delete('/users/:id', async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Solo un administrador puede eliminar cuentas.' });
+  const userId = Number(req.params.id);
+  if (!Number.isSafeInteger(userId) || userId < 1) {
+    return res.status(400).json({ error: 'La cuenta seleccionada no es válida.' });
+  }
+  if (userId === req.user.id) {
+    return res.status(409).json({ error: 'No puede eliminar la cuenta con la que inició sesión.' });
+  }
+
+  const result = await db.transaction(async client => {
+    await client.query('LOCK TABLE users IN EXCLUSIVE MODE');
+    const target = await client.query('SELECT id, role FROM users WHERE id = $1', [userId]);
+    if (!target.rowCount) return { error: 'La cuenta no existe.', status: 404 };
+    if (target.rows[0].role === 'admin') {
+      const { rows } = await client.query("SELECT COUNT(*)::integer AS count FROM users WHERE role = 'admin'");
+      if (rows[0].count <= 1) {
+        return { error: 'No se puede eliminar la última cuenta de administrador.', status: 409 };
+      }
+    }
+    await client.query('DELETE FROM users WHERE id = $1', [userId]);
+    return { deleted: true };
+  });
+  if (result.error) return res.status(result.status).json({ error: result.error });
+  res.json({ ok: true });
 });
 
 router.put('/password', async (req, res) => {

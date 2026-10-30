@@ -128,7 +128,8 @@ El panel acepta JPG, PNG y WebP de hasta **4 MB por imagen**, con un máximo de 
 | GET / PUT / DELETE | `/api/admin/products/:id` | Ver / actualizar / eliminar producto |
 | GET / POST | `/api/admin/categories` | Listar / crear categoría |
 | PUT / DELETE | `/api/admin/categories/:id` | Renombrar / eliminar categoría |
-| POST | `/api/admin/users` | Crear cuenta (solo administrador) |
+| GET / POST | `/api/admin/users` | Listar / crear cuentas (solo administrador) |
+| DELETE | `/api/admin/users/:id` | Eliminar una cuenta; no permite eliminar la propia ni la última cuenta de administrador |
 | PUT | `/api/admin/password` | Cambiar contraseña propia |
 | POST / DELETE | `/api/admin/uploads` | Subir / limpiar imágenes temporales |
 

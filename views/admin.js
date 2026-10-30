@@ -4,7 +4,7 @@
    ===================================================================== */
 const $ = (s, c = document) => c.querySelector(s);
 const MAX_IMAGES = 8;
-const state = { products: [], categories: [], editing: null, removeIds: new Set(), newFiles: [] };
+const state = { products: [], categories: [], users: [], currentUserId: null, editing: null, removeIds: new Set(), newFiles: [] };
 
 function el(tag, props = {}, ...children) {
   const n = document.createElement(tag);
@@ -59,6 +59,8 @@ async function loadSession() {
   const { user } = await api('/api/auth/me');
   $('#userEmail').textContent = user.email;
   $('#createUserBlock').hidden = user.role !== 'admin';
+  $('#manageUsersBlock').hidden = user.role !== 'admin';
+  if (user.role === 'admin') await loadUsers();
 }
 $('#logout').addEventListener('click', async () => {
   await api('/api/auth/logout', { method: 'POST' }).catch(() => {});
@@ -87,12 +89,51 @@ $('#createUserForm').addEventListener('submit', async e => {
     });
     form.reset();
     toast('Cuenta de administrador creada.');
+    await loadUsers();
   } catch (err) {
     error.textContent = err.message;
   } finally {
     $('#createUserSubmit').disabled = false;
   }
 });
+
+async function loadUsers() {
+  const result = await api('/api/admin/users');
+  state.users = result.users;
+  state.currentUserId = result.currentUserId;
+  renderUsers();
+}
+function renderUsers() {
+  $('#userRows').replaceChildren(...state.users.map(user => {
+    const isCurrentUser = user.id === state.currentUserId;
+    return el('tr', {},
+      el('td', { text: user.email }),
+      el('td', { text: user.role === 'admin' ? 'Administrador' : 'Editor' }),
+      el('td', { class: 'right actions' },
+        isCurrentUser
+          ? el('span', { class: 'muted', text: 'Sesión actual' })
+          : el('button', {
+              class: 'btn btn--danger btn--sm',
+              type: 'button',
+              text: 'Borrar',
+              onclick: () => removeUser(user)
+            })));
+  }));
+}
+async function removeUser(user) {
+  const confirmed = await confirmAction(
+    'Eliminar cuenta',
+    `¿Eliminar la cuenta de "${user.email}"? Esta acción no se puede deshacer.`
+  );
+  if (!confirmed) return;
+  try {
+    await api(`/api/admin/users/${user.id}`, { method: 'DELETE' });
+    toast('Cuenta eliminada.');
+    await loadUsers();
+  } catch (error) {
+    toast(error.message, true);
+  }
+}
 
 $('#changePasswordForm').addEventListener('submit', async e => {
   e.preventDefault();

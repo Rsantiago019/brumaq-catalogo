@@ -78,6 +78,17 @@
       </form>
     </div>
 
+    <div id="manageUsersBlock" class="account-block">
+      <h3>Cuentas existentes</h3>
+      <p class="hint">No puede eliminar la cuenta con la que inició sesión ni la última cuenta de administrador.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Email</th><th>Rol</th><th class="right">Acciones</th></tr></thead>
+          <tbody id="userRows"></tbody>
+        </table>
+      </div>
+    </div>
+
     <div class="account-block">
       <h3>Cambiar mi contraseña</h3>
       <form id="changePasswordForm" class="account-form" novalidate>
