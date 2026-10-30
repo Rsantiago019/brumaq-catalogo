@@ -39,6 +39,16 @@ function toast(msg, isError = false) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => (t.className = 'toast'), 4500);
 }
+function confirmAction(title, message, acceptLabel = 'Borrar') {
+  const dialog = $('#confirmDialog');
+  $('#confirmTitle').textContent = title;
+  $('#confirmMessage').textContent = message;
+  $('#confirmAccept').textContent = acceptLabel;
+  dialog.showModal();
+  return new Promise(resolve => {
+    dialog.addEventListener('close', () => resolve(dialog.returnValue === 'confirm'), { once: true });
+  });
+}
 const fmtDate = value => new Date(value).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
 /* ---------- Sesión / pestañas ---------- */
@@ -144,7 +154,7 @@ async function toggleStatus(p) {
   } catch (e) { toast(e.message, true); }
 }
 async function removeProduct(p) {
-  if (!confirm(`¿Borrar "${p.name}" y sus imágenes?\nEsta acción no se puede deshacer.`)) return;
+  if (!(await confirmAction('Borrar producto', `¿Borrar "${p.name}" y sus imágenes? Esta acción no se puede deshacer.`))) return;
   try {
     await api(`/api/admin/products/${p.id}`, { method: 'DELETE' });
     toast('Producto borrado.');
@@ -288,7 +298,7 @@ function renderCategories() {
           catch (e) { toast(e.message, true); }
         } }),
         el('button', { class: 'btn btn--danger btn--sm', type: 'button', text: 'Borrar', onclick: async () => {
-          if (!confirm(`¿Borrar el tipo "${c.name}"?`)) return;
+          if (!(await confirmAction('Borrar tipo de producto', `¿Borrar el tipo "${c.name}"?`))) return;
           try { state.categories = await api(`/api/admin/categories/${c.id}`, { method: 'DELETE' }); renderCategories(); toast('Tipo borrado.'); }
           catch (e) { toast(e.message, true); }
         } })));

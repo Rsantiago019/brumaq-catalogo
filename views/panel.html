@@ -154,6 +154,21 @@
   </form>
 </dialog>
 
+<dialog id="confirmDialog" aria-labelledby="confirmTitle" aria-describedby="confirmMessage">
+  <form id="confirmForm" method="dialog">
+    <div class="dlg__head">
+      <h2 id="confirmTitle">Confirmar acción</h2>
+    </div>
+    <div class="dlg__body">
+      <p id="confirmMessage"></p>
+    </div>
+    <div class="dlg__foot">
+      <button class="btn btn--ghost" type="submit" value="cancel">Cancelar</button>
+      <button class="btn btn--danger" type="submit" id="confirmAccept" value="confirm">Borrar</button>
+    </div>
+  </form>
+</dialog>
+
 <script src="/admin/app.js"></script>
 </body>
 </html>
