@@ -8,6 +8,7 @@ Catálogo público de maquinaria agrícola con panel de administración, gestió
 
 - Vercel sirve el catálogo estático y ejecuta el backend Express como Function para las rutas API y administrativas.
 - Neon Postgres guarda cuentas, sesiones revocables, categorías, productos y referencias a imágenes.
+- Los productos admiten un precio opcional en pesos argentinos; si se deja vacío, no se muestra en el catálogo.
 - Vercel Blob guarda las imágenes públicas. La aplicación valida tipo MIME y firma del archivo antes de subirlo.
 - Las funciones de Vercel no usan archivos locales como almacenamiento persistente.
 
@@ -103,6 +104,8 @@ Además, defina `SMOKE_TEST_ALLOW_WRITES=YES`. Ambas confirmaciones son obligato
 ## Imágenes
 
 El panel acepta JPG, PNG y WebP de hasta **4 MB por imagen**, con un máximo de ocho imágenes por producto. Cada imagen se envía por separado para mantenerse bajo el límite de payload de las Functions de Vercel y se almacena en Blob. El panel valida firmas reales del archivo antes de subirlo.
+
+El precio del producto es opcional y se ingresa en pesos argentinos. Dejar el campo vacío oculta el precio en la ficha pública; se aceptan hasta dos decimales.
 
 ## API
 

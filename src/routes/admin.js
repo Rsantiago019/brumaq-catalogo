@@ -119,6 +119,7 @@ async function serialize(product) {
     name: product.name,
     description: product.description,
     specs: product.specs,
+    price: product.price,
     status: product.status,
     category_id: product.category_id,
     category: product.category_name,
@@ -164,6 +165,18 @@ async function validateProduct(body, { partial }) {
     if (!['active', 'inactive'].includes(status)) return { error: 'Estado inválido.' };
     data.status = status;
   }
+  if (!partial || has('price')) {
+    const rawPrice = b.price;
+    if (rawPrice === null || rawPrice === undefined || rawPrice === '') {
+      data.price = null;
+    } else {
+      const price = String(rawPrice).trim();
+      if (!/^\d{1,10}(?:\.\d{1,2})?$/.test(price)) {
+        return { error: 'El precio debe ser un importe en pesos, sin signo ni separadores, con hasta 2 decimales.' };
+      }
+      data.price = price;
+    }
+  }
   if (!partial || has('description')) {
     const description = String(b.description ?? '').trim();
     if (description.length > 5000) return { error: 'La descripción es demasiado larga (máx. 5000).' };
@@ -198,9 +211,9 @@ router.post('/products', async (req, res) => {
   const id = await db.transaction(async client => {
     const slug = await uniqueSlug('products', slugify(data.name));
     const result = await client.query(
-      `INSERT INTO products (name, slug, category_id, description, specs, status)
-       VALUES ($1, $2, $3, $4, $5::jsonb, $6) RETURNING id`,
-      [data.name, slug, data.category_id, data.description, JSON.stringify(data.specs), data.status]
+      `INSERT INTO products (name, slug, category_id, description, specs, price, status)
+       VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7) RETURNING id`,
+      [data.name, slug, data.category_id, data.description, JSON.stringify(data.specs), data.price, data.status]
     );
     const productId = result.rows[0].id;
     for (const [position, url] of data.images.entries()) {

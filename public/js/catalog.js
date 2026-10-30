@@ -1,7 +1,7 @@
 'use strict';
 /* =====================================================================
    CATÁLOGO PÚBLICO
-   - Carga productos activos desde /api (nunca hay precios).
+   - Carga productos activos desde /api.
    - Filtro por "tipo de producto" + buscador, sin recargar la página.
    - Cada producto genera su enlace de WhatsApp con el nombre incluido.
    - Todo el texto proveniente de la base se inserta con textContent (anti-XSS).
@@ -25,6 +25,12 @@ function el(tag, props = {}, ...children) {
   return node;
 }
 const norm = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const formatPrice = price => new Intl.NumberFormat('es-AR', {
+  style: 'currency',
+  currency: 'ARS',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2
+}).format(Number(price));
 const api = async path => {
   const r = await fetch(path, { headers: { Accept: 'application/json' } });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -96,6 +102,7 @@ function card(p) {
       safeImg(img, p.name), el('span', { class: 'badge', text: p.category.name })),
     el('div', { class: 'card__body' },
       el('h3', {}, el('button', { type: 'button', text: p.name, onclick: open })),
+      p.price != null ? el('p', { class: 'card__price', text: formatPrice(p.price) }) : null,
       p.specs.length
         ? el('ul', { class: 'mini' }, p.specs.slice(0, 3).map(s => el('li', {}, el('span', { text: s.label }), el('b', { text: s.value }))))
         : null,
@@ -111,6 +118,9 @@ const dlg = $('#detail');
 function openDetail(p) {
   $('#d-cat').textContent = p.category.name;
   $('#d-name').textContent = p.name;
+  const price = $('#d-price');
+  price.textContent = p.price != null ? formatPrice(p.price) : '';
+  price.hidden = p.price == null;
   $('#d-desc').textContent = p.description;
   $('#d-desc').hidden = !p.description;
   $('#d-wa').href = waLink(p);

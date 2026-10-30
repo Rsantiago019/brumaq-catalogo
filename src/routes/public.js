@@ -21,6 +21,7 @@ async function serialize(product) {
     name: product.name,
     description: product.description,
     specs: product.specs,
+    price: product.price,
     category: { name: product.category_name, slug: product.category_slug },
     images: images.map(image => ({ id: image.id, url: image.filename }))
   };

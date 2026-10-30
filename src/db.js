@@ -57,10 +57,12 @@ async function initialize() {
           category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
           description TEXT NOT NULL DEFAULT '',
           specs JSONB NOT NULL DEFAULT '[]'::jsonb,
+          price NUMERIC(12, 2),
           status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
           created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
+        ALTER TABLE products ADD COLUMN IF NOT EXISTS price NUMERIC(12, 2);
         CREATE INDEX IF NOT EXISTS idx_products_category_status ON products(category_id, status);
 
         CREATE TABLE IF NOT EXISTS product_images (

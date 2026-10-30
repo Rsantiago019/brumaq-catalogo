@@ -5,6 +5,12 @@
 const $ = (s, c = document) => c.querySelector(s);
 const MAX_IMAGES = 8;
 const state = { products: [], categories: [], users: [], currentUserId: null, editing: null, removeIds: new Set(), newFiles: [] };
+const formatPrice = price => new Intl.NumberFormat('es-AR', {
+  style: 'currency',
+  currency: 'ARS',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2
+}).format(Number(price));
 
 function el(tag, props = {}, ...children) {
   const n = document.createElement(tag);
@@ -179,7 +185,10 @@ function renderProducts() {
     });
     return el('tr', {},
       el('td', {}, thumb),
-      el('td', {}, el('strong', { text: p.name }), el('div', { class: 'muted', text: `${p.images.length} imagen(es) · ${p.specs.length} característica(s)` })),
+      el('td', {},
+        el('strong', { text: p.name }),
+        el('div', { class: 'muted', text: p.price != null ? formatPrice(p.price) : 'Sin precio' }),
+        el('div', { class: 'muted', text: `${p.images.length} imagen(es) · ${p.specs.length} característica(s)` })),
       el('td', { text: p.category }),
       el('td', {}, status),
       el('td', { text: fmtDate(p.updated_at) }),
@@ -264,6 +273,7 @@ function openForm(p = null) {
   $('#formError').textContent = '';
   form.elements.name.value = p?.name ?? '';
   form.description.value = p?.description ?? '';
+  form.price.value = p?.price ?? '';
   form.status.value = p?.status ?? 'active';
   form.category_id.replaceChildren(...state.categories.map(c => el('option', { value: c.id, text: c.name })));
   if (p) form.category_id.value = p.category_id;
@@ -303,6 +313,7 @@ form.addEventListener('submit', async e => {
       category_id: form.category_id.value,
       status: form.status.value,
       description: form.description.value,
+      price: form.price.value === '' ? null : form.price.value,
       specs: readSpecs(),
       images: uploaded
     };
