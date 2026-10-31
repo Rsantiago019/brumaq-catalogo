@@ -81,11 +81,29 @@ function setCategory(slug) {
   renderGrid();
 }
 
+function clearFilters() {
+  state.q = '';
+  $('#search').value = '';
+  setCategory('all');
+}
+
 /* ---------- TARJETAS ---------- */
 function renderGrid() {
   const list = visibleProducts();
   const grid = $('#grid');
-  grid.replaceChildren(...list.map(card));
+  if (list.length) {
+    grid.replaceChildren(...list.map(card));
+  } else {
+    const filtered = state.q.trim() || state.category !== 'all';
+    grid.replaceChildren(el('div', { class: 'empty-state' },
+      el('h3', { text: filtered ? 'No encontramos ese equipo' : 'Estamos preparando el catálogo' }),
+      el('p', { text: filtered
+        ? 'Pruebe con otro nombre o tipo de producto.'
+        : 'Mientras tanto, escríbanos y le ayudamos a encontrar el equipo adecuado.' }),
+      filtered
+        ? el('button', { class: 'btn btn--line', type: 'button', text: 'Limpiar filtros', onclick: clearFilters })
+        : el('a', { class: 'btn btn--wa', href: '#contacto', text: 'Consultar por WhatsApp' })));
+  }
   $('#status').textContent = state.products.length
     ? list.length ? `Mostrando ${list.length} de ${state.products.length} productos.` : 'No hay productos que coincidan con su búsqueda.'
     : 'Pronto publicaremos nuestros equipos. Consúltenos por WhatsApp.';
@@ -153,7 +171,11 @@ async function init() {
     const [cfg, categories, products] = await Promise.all([api('/api/config'), api('/api/categories'), api('/api/products')]);
     Object.assign(state, { cfg, categories, products });
   } catch {
-    $('#status').textContent = 'No pudimos cargar el catálogo. Intente nuevamente en unos minutos.';
+    $('#status').textContent = '';
+    $('#grid').replaceChildren(el('div', { class: 'empty-state', role: 'alert' },
+      el('h3', { text: 'No pudimos cargar el catálogo' }),
+      el('p', { text: 'Revise su conexión e intente nuevamente.' }),
+      el('button', { class: 'btn', type: 'button', text: 'Reintentar', onclick: () => location.reload() })));
     return;
   }
   const { cfg } = state;

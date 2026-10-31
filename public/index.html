@@ -30,21 +30,35 @@
   <section class="hero">
     <div class="wrap hero__in">
       <p class="eyebrow">Maquinaria agrícola · Trevelin, Chubut</p>
-      <h1>Catálogo de<br><span>maquinaria</span></h1>
+      <h1>Maquinaria agrícola<br><span>de confianza.</span></h1>
       <p class="hero__lead">Tractores, trilladoras, cosechadoras e implementos. Encuentre el equipo que necesita y consúltenos directamente por WhatsApp.</p>
-      <a class="btn" href="#catalogo">Ver catálogo</a>
+      <div class="hero__actions">
+        <a class="btn" href="#catalogo">Ver catálogo <span aria-hidden="true">↓</span></a>
+        <a class="hero__link" href="#contacto">Hablar con un asesor <span aria-hidden="true">→</span></a>
+      </div>
+      <ul class="hero__facts" aria-label="Por qué elegirnos">
+        <li><b>Atención directa</b> por WhatsApp</li>
+        <li><b>Trevelin</b>, Chubut</li>
+        <li><b>Variedad</b> de equipos e implementos</li>
+      </ul>
     </div>
   </section>
 
   <section class="catalog" id="catalogo" aria-labelledby="t-catalogo">
     <div class="wrap">
-      <p class="eyebrow eyebrow--dark">Catálogo</p>
-      <h2 class="title" id="t-catalogo">Nuestros equipos</h2>
+      <div class="catalog__intro">
+        <div>
+          <p class="eyebrow eyebrow--dark">Catálogo</p>
+          <h2 class="title" id="t-catalogo">Nuestros equipos</h2>
+        </div>
+        <p>Filtre por tipo de producto o busque por nombre. Si necesita más información, consúltenos.</p>
+      </div>
 
       <div class="toolbar">
         <div class="filters" id="filters" role="group" aria-label="Filtrar por tipo de producto"></div>
         <label class="search">
           <span class="sr-only">Buscar por nombre</span>
+          <svg class="search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
           <input type="search" id="search" placeholder="Buscar por nombre…" autocomplete="off" maxlength="60">
         </label>
       </div>
