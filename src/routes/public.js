@@ -1,5 +1,7 @@
 'use strict';
 const express = require('express');
+const rateLimit = require('express-rate-limit');
+const { sendInquiry } = require('../email');
 const db = require('../db');
 const config = require('../config');
 
@@ -34,7 +36,8 @@ router.get('/config', (req, res) => {
     whatsappNumber: business.whatsappNumber,
     whatsappMessage: business.whatsappMessage,
     instagram: business.instagram,
-    mapQuery: business.mapQuery
+    mapQuery: business.mapQuery,
+    inquiryEnabled: Boolean(config.email.enabled && config.email.contactTo)
   });
 });
 
@@ -62,6 +65,40 @@ router.get('/products/:slug', async (req, res) => {
   const product = rows[0];
   if (!product) return res.status(404).json({ error: 'Producto no encontrado.' });
   res.json(await serialize(product));
+});
+
+const inquiryLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Demasiadas consultas. Espere unos minutos o escríbanos por WhatsApp.' }
+});
+
+router.post('/inquiries', inquiryLimiter, async (req, res) => {
+  const b = req.body || {};
+  const clean = (value, max) => (typeof value === 'string' ? value.trim().slice(0, max) : '');
+  if (clean(b.website, 100)) return res.json({ ok: true }); // campo trampa para bots
+  const name = clean(b.name, 80);
+  const contact = clean(b.contact, 120);
+  const product = clean(b.product, 120);
+  const message = clean(b.message, 1500);
+  if (name.length < 2) return res.status(400).json({ error: 'Ingrese su nombre.' });
+  const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact);
+  if (!isEmail && contact.replace(/\D/g, '').length < 6) {
+    return res.status(400).json({ error: 'Ingrese un email o teléfono válido.' });
+  }
+  if (message.length < 5) return res.status(400).json({ error: 'Escriba su consulta.' });
+  if (!config.email.enabled || !config.email.contactTo) {
+    return res.status(503).json({ error: 'El formulario no está disponible por ahora. Escríbanos por WhatsApp.' });
+  }
+  try {
+    await sendInquiry({ name, contact, replyTo: isEmail ? contact : '', product, message });
+  } catch (error) {
+    console.error('[INQUIRY]', error.message);
+    return res.status(502).json({ error: 'No pudimos enviar su consulta. Escríbanos por WhatsApp.' });
+  }
+  res.json({ ok: true });
 });
 
 module.exports = router;

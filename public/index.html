@@ -6,11 +6,16 @@
 <title>Catálogo de maquinaria agrícola | Brumaq</title>
 <meta name="description" content="Catálogo de maquinaria agrícola: tractores, trilladoras, cosechadoras, arados, rastras y sembradoras. Consulte por WhatsApp.">
 <meta name="theme-color" content="#174c8b">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Brumaq">
+<meta property="og:title" content="Catálogo de maquinaria agrícola | Brumaq">
+<meta property="og:description" content="Tractores, trilladoras, cosechadoras e implementos en Trevelin, Chubut. Consulte por WhatsApp.">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LocalBusiness","name":"Brumaq","description":"Venta de maquinaria agrícola: tractores, trilladoras, cosechadoras e implementos.","address":{"@type":"PostalAddress","addressLocality":"Trevelin","addressRegion":"Chubut","addressCountry":"AR"}}</script>
 <link rel="icon" href="img/logo.png" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Saira:ital,wdth,wght@0,75..125,400..900;1,75..125,400..900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="css/site.css?v=20261101f">
 </head>
 <body>
 <a class="sr-only" href="#catalogo">Ir al catálogo</a>
@@ -18,7 +23,8 @@
 <header class="header">
   <div class="wrap header__in">
     <a class="logo" href="/" aria-label="Brumaq, inicio"><img src="img/logo.png" alt="Brumaq" width="164" height="52"></a>
-    <nav class="nav" aria-label="Principal">
+    <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="nav" aria-label="Abrir menú"><span></span><span></span><span></span></button>
+    <nav class="nav" id="nav" aria-label="Principal">
       <a href="#catalogo">Catálogo</a>
       <a href="#ubicacion">Dónde encontrarnos</a>
       <a href="#contacto" class="nav__cta">Consultar</a>
@@ -36,12 +42,20 @@
         <a class="btn" href="#catalogo">Ver catálogo <span aria-hidden="true">↓</span></a>
         <a class="hero__link" href="#contacto">Hablar con un asesor <span aria-hidden="true">→</span></a>
       </div>
-      <ul class="hero__facts" aria-label="Por qué elegirnos">
-        <li><b>Atención directa</b> por WhatsApp</li>
-        <li><b>Trevelin</b>, Chubut</li>
-        <li><b>Variedad</b> de equipos e implementos</li>
-      </ul>
     </div>
+    <video class="hero__video" autoplay muted loop playsinline preload="metadata" poster="/img/hero-poster.jpg" aria-hidden="true">
+      <source src="/img/hero.webm" type="video/webm">
+      <source src="/img/hero.mp4" type="video/mp4">
+    </video>
+  </section>
+
+  <section class="trust" aria-label="Datos de confianza">
+    <ul class="wrap trust__in">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><div><strong>Trevelin, Chubut</strong><span>Visítenos y vea los equipos</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L3 21l1.6-5.3A8.5 8.5 0 1 1 21 12z"/></svg><div><strong>Atención directa</strong><span>Respuesta por WhatsApp</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg><div><strong>Financiación</strong><span>Consulte opciones de pago</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="17.5" r="1.7"/><circle cx="17" cy="17.5" r="1.7"/></svg><div><strong>Envíos</strong><span>Coordinamos la entrega</span></div></li>
+    </ul>
   </section>
 
   <section class="catalog" id="catalogo" aria-labelledby="t-catalogo">
@@ -63,8 +77,81 @@
         </label>
       </div>
 
+      <div class="refine" id="refine" hidden>
+        <div class="seg" id="condFilters" role="group" aria-label="Filtrar por estado"></div>
+        <label class="sort">
+          <span>Ordenar por</span>
+          <select id="sort">
+            <option value="recent">Más recientes</option>
+            <option value="price-asc">Precio: menor a mayor</option>
+            <option value="price-desc">Precio: mayor a menor</option>
+            <option value="name">Nombre (A-Z)</option>
+          </select>
+        </label>
+      </div>
+
       <p class="status" id="status" role="status" aria-live="polite"></p>
       <div class="grid" id="grid"></div>
+    </div>
+  </section>
+
+  <section class="why" aria-labelledby="t-why">
+    <div class="wrap">
+      <p class="eyebrow eyebrow--dark">Por qué elegirnos</p>
+      <h2 class="title" id="t-why">Un equipo confiable, de principio a fin</h2>
+      <div class="why__grid">
+        <article><span class="why__n">01</span><h3>Asesoramiento real</h3><p>Le ayudamos a elegir el equipo que se ajusta a su campo y a su trabajo.</p></article>
+        <article><span class="why__n">02</span><h3>Equipos a la vista</h3><p>Puede venir a verlos, consultar su estado y resolver cada duda antes de decidir.</p></article>
+        <article><span class="why__n">03</span><h3>Opciones de pago</h3><p>Consulte por financiación y alternativas para concretar su compra.</p></article>
+        <article><span class="why__n">04</span><h3>Entrega coordinada</h3><p>Nos ocupamos de acordar el envío para que el equipo llegue a destino.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="reel" aria-labelledby="t-reel">
+    <div class="wrap reel__in">
+      <div class="reel__txt">
+        <p class="eyebrow eyebrow--dark">En el campo</p>
+        <h2 class="title" id="t-reel">Maquinaria que trabaja</h2>
+        <p>Equipos pensados para la cosecha y el trabajo diario. Elija el que se ajusta a su campo y consúltenos para verlo en persona.</p>
+        <a class="btn"  href="#catalogo">Ver equipos disponibles</a>
+      </div>
+      <div class="reel__video">
+        <video controls playsinline preload="none" poster="img/equipos-poster.jpg" aria-label="Cosechadora trabajando en el campo">
+          <source src="img/equipos.mp4" type="video/mp4">
+        </video>
+      </div>
+    </div>
+  </section>
+
+  <!-- Reemplazar por testimonios reales de clientes -->
+  <section class="proof" aria-labelledby="t-proof">
+    <div class="wrap">
+      <p class="eyebrow eyebrow--dark">Clientes</p>
+      <h2 class="title" id="t-proof">Lo que dicen quienes ya trabajan con nosotros</h2>
+      <div class="proof__grid">
+        <figure><blockquote>Nos asesoraron bien y el trato fue claro desde la primera consulta.</blockquote><figcaption><strong>Productor agropecuario</strong><span>Chubut</span></figcaption></figure>
+        <figure><blockquote>Pude ver el equipo antes de comprar y coordinamos la entrega sin vueltas.</blockquote><figcaption><strong>Contratista rural</strong><span>Patagonia</span></figcaption></figure>
+        <figure><blockquote>Respondieron rápido por WhatsApp y resolvieron todas mis dudas.</blockquote><figcaption><strong>Cliente particular</strong><span>Trevelin</span></figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="faq" aria-labelledby="t-faq">
+    <div class="wrap faq__in">
+      <div>
+        <p class="eyebrow eyebrow--dark">Preguntas frecuentes</p>
+        <h2 class="title" id="t-faq">Antes de consultar</h2>
+        <p class="faq__lead">¿No encuentra su respuesta? Escríbanos y se la damos.</p>
+      </div>
+      <div class="faq__list">
+        <details><summary>¿Cómo puedo consultar por un equipo?</summary><p>Desde cada producto, con el botón «Consultar por WhatsApp». El mensaje ya incluye el equipo que le interesa.</p></details>
+        <details><summary>¿Tienen financiación?</summary><p>Consulte por las opciones disponibles para el equipo que le interesa y le informamos las condiciones vigentes.</p></details>
+        <details><summary>¿Hacen envíos?</summary><p>Sí, coordinamos la entrega según el destino. Indíquenos su localidad al consultar.</p></details>
+        <details><summary>¿Tienen garantía?</summary><p>Consúltenos por la cobertura de cada equipo, ya que depende del producto y su estado.</p></details>
+        <details><summary>¿Reciben equipos en permuta?</summary><p>Evaluamos cada caso. Envíenos los datos y fotos de su equipo por WhatsApp.</p></details>
+        <details><summary>¿Puedo ver el equipo en persona?</summary><p>Por supuesto. Estamos en Trevelin, Chubut; coordine su visita por WhatsApp.</p></details>
+      </div>
     </div>
   </section>
 
@@ -81,9 +168,23 @@
 
   <section class="contact" id="contacto">
     <div class="wrap contact__in">
-      <h2 class="title title--light">¿No encuentra lo que busca?</h2>
-      <p>Escríbanos y le ayudaremos a encontrar el equipo adecuado para su campo.</p>
-      <a class="btn btn--wa" id="waGeneral" href="#" target="_blank" rel="noopener">Escribir por WhatsApp</a>
+      <div class="contact__txt">
+        <h2 class="title title--light">¿No encuentra lo que busca?</h2>
+        <p>Escríbanos y le ayudaremos a encontrar el equipo adecuado para su campo.</p>
+        <a class="btn btn--wa" id="waGeneral" href="#" target="_blank" rel="noopener">Escribir por WhatsApp</a>
+      </div>
+      <form class="inquiry" id="inquiry" novalidate hidden>
+        <h3>O déjenos su consulta</h3>
+        <div class="inquiry__row">
+          <label>Nombre<input name="name" autocomplete="name" maxlength="80" required></label>
+          <label>Email o teléfono<input name="contact" autocomplete="email" maxlength="120" required></label>
+        </div>
+        <label>Equipo de interés<select name="product" id="inqProduct"><option value="">Consulta general</option></select></label>
+        <label>Mensaje<textarea name="message" rows="4" maxlength="1500" required placeholder="Cuéntenos qué necesita…"></textarea></label>
+        <input class="inquiry__trap" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <p class="inquiry__msg" id="inqMsg" role="status" aria-live="polite"></p>
+        <button class="btn" type="submit">Enviar consulta</button>
+      </form>
     </div>
   </section>
 </main>
@@ -91,7 +192,7 @@
 <footer class="footer">
   <div class="wrap footer__in">
     <span>© <span id="year"></span> <span id="bizName">Brumaq</span>. Maquinaria agrícola.</span>
-    <span class="footer__links"><a id="igLink" href="#" target="_blank" rel="noopener">Instagram</a><a href="admin">Acceso administrador</a></span>
+    <span class="footer__links"><a id="igLink" href="#" target="_blank" rel="noopener"><i class="fa fa-instagram" aria-hidden="true"></i>Instagram</a><a href="/admin">Acceso administrador</a></span>
   </div>
 </footer>
 
@@ -109,10 +210,23 @@
       <p class="detail__desc" id="d-desc"></p>
       <h4>Características</h4>
       <dl class="specs" id="d-specs"></dl>
-      <a class="btn btn--wa" id="d-wa" href="#" target="_blank" rel="noopener">Consultar por WhatsApp</a>
+      <div class="detail__related" id="d-related" hidden>
+        <h4>Equipos relacionados</h4>
+        <div class="related" id="d-related-list"></div>
+      </div>
+      <div class="detail__cta">
+        <a class="btn btn--wa" id="d-wa" href="#" target="_blank" rel="noopener">Consultar por WhatsApp</a>
+        <div class="detail__tools">
+          <button type="button" class="tool" id="d-share">Compartir enlace</button>
+          <button type="button" class="tool" id="d-inquiry" hidden>Consultar por formulario</button>
+        </div>
+      </div>
     </div>
   </div>
 </dialog>
+
+<button class="to-top" id="toTop" type="button" aria-label="Volver arriba" hidden>↑</button>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <a class="wa-float" id="waFloat" href="#" target="_blank" rel="noopener" aria-label="Escribir por WhatsApp">
   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.2 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.3 0 .5l-.3.5-.4.4c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.1.1.6-.1 1.2z"/></svg>

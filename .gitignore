@@ -1,9 +1,34 @@
+# Dependencias
 node_modules/
+
+# Variables de entorno y secretos (solo se versiona el ejemplo)
 .env
 .env.*
 !.env.example
+*.pem
+*.key
+
+# Datos locales y archivos subidos
 data/
 uploads/
+uploads.zip
+*.sqlite
+*.db
 
+# Vercel
 .vercel
-.env*
+
+# Logs y temporales
+*.log
+npm-debug.log*
+.cache/
+tmp/
+*.tmp
+
+# Videos originales sin comprimir (GitHub rechaza archivos de mas de 100 MB)
+public/img/*-original.*
+
+# Sistema y editores
+.DS_Store
+Thumbs.db
+.idea/

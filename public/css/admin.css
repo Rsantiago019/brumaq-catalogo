@@ -711,3 +711,40 @@ legend { text-transform: none; letter-spacing: 0.01em; }
   .toast { top: 110px; }
   .dlg__foot .btn { flex: 1; }
 }
+
+/* Ajustes de marca */
+:root {
+  --night: #101d2a;
+  --navy: #123553;
+  --blue: #174c8b;
+  --silver: #f3f5f2;
+  --silver-2: #dce3e1;
+  --muted: #596875;
+  --line: #e3e9e6;
+  --ok: #287348;
+}
+
+body { background: #f5f7f5; }
+.wrap { max-width: 1280px; }
+.bar { background: rgba(255, 255, 255, 0.97); }
+.bar .btn { font-size: 0.84rem; }
+.tabs button[aria-selected="true"] { color: var(--blue); }
+.tabs button[aria-selected="true"]::after { background: var(--blue); }
+.table-wrap, .account-block {
+  border-color: #e2e8e5;
+  box-shadow: 0 2px 5px rgba(16, 29, 42, 0.035), 0 10px 26px rgba(16, 29, 42, 0.045);
+}
+th { background: #f5f7f5; }
+tbody tr:hover { background: #f7faf8; }
+input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 3px rgba(23, 76, 139, 0.14); }
+.login-page {
+  background:
+    radial-gradient(ellipse 58% 62% at 82% 12%, rgba(75, 131, 175, 0.3), transparent 70%),
+    linear-gradient(145deg, #123b5d, #102b45 58%, #0c1a28);
+}
+.login { box-shadow: 0 28px 76px rgba(4, 17, 28, 0.36); }
+
+@media (max-width: 700px) {
+  .bar__in { padding-block: 0.7rem; }
+  .bar__title { border-left: 0; padding-left: 0; }
+}

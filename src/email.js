@@ -32,4 +32,17 @@ async function sendPasswordReset(email, resetUrl) {
   });
 }
 
-module.exports = { sendPasswordReset };
+const oneLine = value => String(value).replace(/[\r\n]+/g, ' ').trim();
+
+async function sendInquiry({ name, contact, replyTo, product, message }) {
+  if (!transport || !config.email.contactTo) throw new Error('El servicio de correo no está configurado.');
+  await transport.sendMail({
+    from: config.email.from,
+    to: config.email.contactTo,
+    replyTo: replyTo || undefined,
+    subject: `Consulta web: ${oneLine(product || 'consulta general')}`.slice(0, 150),
+    text: `Nombre: ${oneLine(name)}\nContacto: ${oneLine(contact)}\nProducto: ${oneLine(product || '-')}\n\n${message}`
+  });
+}
+
+module.exports = { sendPasswordReset, sendInquiry };

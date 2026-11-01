@@ -25,6 +25,7 @@ module.exports = {
     password: env.SMTP_PASSWORD || '',
     from: env.EMAIL_FROM || '',
     baseUrl: (env.PUBLIC_BASE_URL || '').replace(/\/+$/, ''),
+    contactTo: env.CONTACT_EMAIL || env.EMAIL_FROM || '',
     get enabled() {
       if (!this.host || this.port < 1 || this.port > 65535 || !this.from || !this.baseUrl) return false;
       if (Boolean(this.user) !== Boolean(this.password)) return false;

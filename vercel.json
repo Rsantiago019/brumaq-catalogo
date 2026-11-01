@@ -18,6 +18,18 @@
   ],
   "rewrites": [
     {
+      "source": "/p/:slug",
+      "destination": "/api/handler?__path=/p/:slug"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/handler?__path=/sitemap.xml"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/api/handler?__path=/robots.txt"
+    },
+    {
       "source": "/api/:path*",
       "destination": "/api/handler?__path=/api/:path*"
     },

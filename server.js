@@ -9,6 +9,7 @@ const db = require('./src/db');
 
 const { authPage, authRequired, csrfGuard, readUser } = require('./src/auth');
 const publicRoutes = require('./src/routes/public');
+const { productPage, sitemap, robots } = require('./src/seo');
 const authRoutes = require('./src/routes/auth');
 const adminRoutes = require('./src/routes/admin');
 
@@ -40,6 +41,11 @@ app.use(
 app.use(cookieParser());
 app.use(express.json({ limit: '100kb' }));
 app.use(express.static(config.publicDir, { maxAge: config.isProd ? '1h' : 0 }));
+
+// SEO: página por producto (con metadatos para buscadores y vista previa al compartir)
+app.get('/p/:slug', productPage);
+app.get('/sitemap.xml', sitemap);
+app.get('/robots.txt', robots);
 
 // API
 app.use('/api', csrfGuard);
