@@ -41,10 +41,11 @@ Guía para desplegar y validar el catálogo, el panel y la recuperación de cont
 
 - [x] Adaptar la capa de datos y las rutas de autenticación, catálogo y administración a Postgres.
 - [x] Añadir `/api/health` para comprobar que la Function puede consultar la base.
-- [x] Mantener el registro inicial limitado a una sola cuenta; las cuentas adicionales requieren un administrador.
+- [x] Deshabilitar el alta pública de cuentas; crear el primer administrador con `npm run create-admin`.
 - [ ] Desplegar el código actualizado en una vista previa de Vercel.
 - [ ] Confirmar que `https://<vista-previa>/api/health` devuelve `{"ok":true}`.
-- [ ] Probar `/admin/login`, la creación inicial de cuenta, el login y el logout.
+- [ ] Antes de abrir el sitio al público, crear el primer administrador desde una terminal de confianza con `DATABASE_URL` apuntando a la base del cliente.
+- [ ] Probar `/admin/login`, el login y el logout.
 - [ ] Probar la creación de otra cuenta desde el panel y verificar permisos de administrador.
 - [ ] Confirmar que `/admin` y `/admin/app.js` no se entreguen sin sesión.
 

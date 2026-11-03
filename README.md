@@ -31,7 +31,13 @@ Catálogo público de maquinaria agrícola con panel de administración, gestió
    - Variables opcionales del negocio: `BUSINESS_NAME`, `WHATSAPP_NUMBER`, `WHATSAPP_MESSAGE`, `INSTAGRAM` y `MAP_QUERY`.
 4. Conectar el repositorio y desplegarlo en Vercel. El archivo `vercel.json` enruta `/api/*` y las páginas dinámicas `/admin/*` al backend. Las páginas estáticas, incluido `/admin/reset-password.html`, se sirven desde `public/`.
 5. Comprobar `https://<dominio>/api/health`. Debe responder `{"ok":true}`.
-6. Abrir `/admin/login` y crear la primera cuenta. El formulario de configuración inicial deja de estar disponible una vez creada.
+6. Antes de exponer el sitio, crear el primer administrador desde una terminal de confianza con `DATABASE_URL` apuntando a la base del cliente:
+
+   ```bash
+   npm run create-admin
+   ```
+
+   El script solicita el email y la contraseña de forma interactiva. El alta pública está deshabilitada; las cuentas posteriores se crean desde el panel.
 
 Generar un secreto localmente:
 
@@ -121,7 +127,7 @@ El precio del producto es opcional y se ingresa en pesos argentinos. Dejar el ca
 
 **Autenticación**
 
-`GET /api/auth/setup-status` · `POST /api/auth/setup` · `POST /api/auth/login` · `POST /api/auth/logout` · `GET /api/auth/me` · `GET /api/auth/recovery-status` · `POST /api/auth/password-recovery` · `POST /api/auth/password-reset`
+`POST /api/auth/login` · `POST /api/auth/logout` · `GET /api/auth/me` · `GET /api/auth/recovery-status` · `POST /api/auth/password-recovery` · `POST /api/auth/password-reset`
 
 **Administración** (requiere sesión; las escrituras exigen `X-Requested-With: fetch`)
 

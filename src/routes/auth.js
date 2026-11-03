@@ -22,7 +22,6 @@ function limiter(limit, message, skipSuccessfulRequests = false) {
 }
 
 const loginLimiter = limiter(10, 'Demasiados intentos. Espere unos minutos e intente nuevamente.', true);
-const setupLimiter = limiter(5, 'Demasiados intentos de configuración. Espere unos minutos e intente nuevamente.');
 const recoveryLimiter = limiter(5, 'Demasiadas solicitudes. Espere unos minutos e intente nuevamente.');
 const resetLimiter = limiter(10, 'Demasiados intentos. Espere unos minutos e intente nuevamente.');
 
@@ -95,39 +94,6 @@ router.post('/password-reset', resetLimiter, async (req, res) => {
 
   if (!reset) return res.status(400).json({ error: 'El enlace no es válido o venció. Solicite uno nuevo.' });
   res.json({ ok: true });
-});
-
-router.get('/setup-status', async (req, res) => {
-  const result = await db.query('SELECT 1 FROM users LIMIT 1');
-  res.json({ setupRequired: result.rowCount === 0 });
-});
-
-router.post('/setup', setupLimiter, async (req, res) => {
-  const email = String(req.body?.email ?? '').trim().toLowerCase();
-  const password = String(req.body?.password ?? '');
-  if (email.length > 254 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-    return res.status(400).json({ error: 'Ingrese un email válido.' });
-  }
-  const issues = passwordIssues(password);
-  if (issues.length) return res.status(400).json({ error: issues.join(' ') });
-
-  const passwordHash = await hashPassword(password);
-  const user = await db.transaction(async client => {
-    await client.query('LOCK TABLE users IN EXCLUSIVE MODE');
-    const existing = await client.query('SELECT 1 FROM users LIMIT 1');
-    if (existing.rowCount) return null;
-    const result = await client.query(
-      `INSERT INTO users (email, password_hash, role)
-       VALUES ($1, $2, 'admin')
-       RETURNING id, email, role, token_version`,
-      [email, passwordHash]
-    );
-    return result.rows[0];
-  });
-  if (!user) return res.status(409).json({ error: 'La cuenta inicial ya fue creada. Inicie sesión.' });
-
-  res.cookie(COOKIE, signToken(user), cookieOptions());
-  res.status(201).json({ user: { email: user.email, role: user.role } });
 });
 
 router.post('/login', loginLimiter, async (req, res) => {

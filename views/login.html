@@ -35,21 +35,6 @@
       <button class="btn" type="submit" id="recoverySubmit">Enviar enlace</button>
       <button class="btn btn--ghost" type="button" id="recoveryCancel">Volver al login</button>
     </form>
-    <form id="setupForm" novalidate hidden>
-      <p>Esta instalación todavía no tiene una cuenta. Cree la primera cuenta de administrador para comenzar.</p>
-      <label>Email
-        <input type="email" name="email" autocomplete="username" maxlength="254" required>
-      </label>
-      <label>Contraseña
-        <input type="password" name="password" autocomplete="new-password" minlength="10" required>
-      </label>
-      <label>Repetir contraseña
-        <input type="password" name="confirmation" autocomplete="new-password" minlength="10" required>
-      </label>
-      <p class="hint">Mínimo 10 caracteres, con letras y números.</p>
-      <p class="error" id="setupError" role="alert"></p>
-      <button class="btn" type="submit" id="setupSubmit">Crear administrador</button>
-    </form>
     <a class="back" href="/">← Volver al catálogo</a>
   </main>
   <script src="/js/login.js"></script>

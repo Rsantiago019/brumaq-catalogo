@@ -3,6 +3,7 @@
 !.env.example
 data/
 uploads/
+uploads.zip
 .git/
 .vercel/
 node_modules/
